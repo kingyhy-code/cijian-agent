@@ -5,7 +5,7 @@
 ## 架构
 
 ```
-FastAPI (:8001)
+FastAPI (:8000)
 ├── /agent/chat              → LangGraph Agent 对话（LLM 自主推理 + 工具调用）
 ├── /agent/chat/stream       → SSE 流式对话（边推理边返回）
 ├── /agent/coach/*           → 创作教练（分析/评估/润色/帮写/对话）
@@ -19,7 +19,7 @@ FastAPI (:8001)
 
 Agent 内部
 ├── LangGraph 状态图（agent_node ⇄ tool_executor）
-├── 12 个注册工具（规则检测/深度评估/用户画像/学习计划/练习生成/批改/进度追踪/知识检索）
+├── 14 个注册工具（规则检测/深度评估/用户画像/学习计划/练习生成/批改/进度追踪/知识检索）
 ├── SQLite 持久化（写作画像/评估历史/练习记录/对话历史/学习计划/任务）
 ├── ChromaDB 向量检索（写作知识库 RAG）
 └── LLM 客户端（OpenAI 兼容 API，对接千问/DeepSeek）
@@ -34,7 +34,7 @@ D:\CijianAgent\
 │   ├── config.py                # 环境配置（AI_API_KEY / 模型 / 端口 / Agent 安全边界）
 │   ├── agent/
 │   │   ├── graph.py             # LangGraph 状态图 + 教学状态机 + ReAct 循环
-│   │   ├── tools.py             # 12 个工具注册（@tool 装饰）
+│   │   ├── tools.py             # 14 个工具注册（@tool 装饰）
 │   │   └── executor.py          # 统一执行框架（生命周期/错误处理/画像联动）
 │   ├── tools/
 │   │   ├── rules.py             # L1-L3 规则引擎（60+ 检测项，纯正则毫秒级）
