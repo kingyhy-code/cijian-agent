@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Database
+*.db
+*.db-wal
+*.db-shm
+
+# ChromaDB
+data/chroma_db/
+
+# Logs
+logs/
+server.log
+*.log
+*.gz
+
+# Environment
+.env
+
+# Test output
+test_*.json
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
+nul
+
+# Claude / CodeGraph
+.claude/
+.codegraph/
+
+# Uploads
+uploads/

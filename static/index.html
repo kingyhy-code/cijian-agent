@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>辞间 · AI 写作教练 (Agent v2.0)</title>
+<style>
+  :root { --bg: #faf9f6; --card: #fff; --text: #2c2c2c; --muted: #888; --border: #e0ddd6; --primary: #1a1a1a; --accent: #805ad5; --radius: 10px; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+  .container { max-width:800px; margin:0 auto; padding:32px 20px; }
+  header { text-align:center; margin-bottom:24px; }
+  header h1 { font-size:24px; font-weight:700; letter-spacing:2px; }
+  header p { color:var(--muted); font-size:14px; margin-top:4px; }
+  .chat-container { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; min-height:400px; max-height:600px; overflow-y:auto; margin-bottom:12px; display:flex; flex-direction:column; gap:12px; }
+  .chat-empty { color:var(--muted); text-align:center; padding:80px 0; font-size:14px; line-height:2; }
+  .chat-bubble { max-width:80%; padding:10px 16px; border-radius:12px; font-size:14px; line-height:1.6; white-space:pre-wrap; }
+  .chat-bubble.user { align-self:flex-end; background:var(--primary); color:#fff; border-bottom-right-radius:4px; }
+  .chat-bubble.assistant { align-self:flex-start; background:#f5f5f4; border-bottom-left-radius:4px; }
+  .chat-bubble.tool { align-self:flex-start; background:#faf5ff; border:1px solid #e9d8fd; font-size:12px; color:var(--accent); }
+  .chat-input-row { display:flex; gap:8px; align-items:flex-end; }
+  .chat-input-row textarea { flex:1; min-height:60px; max-height:150px; padding:10px 14px; font-size:14px; font-family:inherit; border:1px solid var(--border); border-radius:var(--radius); background:var(--card); resize:vertical; outline:none; }
+  .chat-input-row textarea:focus { border-color:#888; }
+  .btn { padding:10px 24px; border-radius:8px; border:none; font-size:14px; cursor:pointer; font-weight:500; background:var(--primary); color:#fff; }
+  .btn:hover { opacity:.85; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .tool-tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; background:#e9d8fd; color:var(--accent); margin-right:4px; margin-bottom:4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>辞间 · AI 写作教练</h1>
+    <p>Agent v2.0 — LLM 自主决策、调用工具、循环推理</p>
+  </header>
+  <div class="chat-container" id="chat">
+    <div class="chat-empty">
+      你好！我是辞间教练。<br>
+      你可以：<br>
+      1. 发一段文字给我，我会帮你评估诊断<br>
+      2. 说"给我出道题"，我会根据你的薄弱点出题<br>
+      3. 直接和我聊聊写作相关的问题
+    </div>
+  </div>
+  <div class="chat-input-row">
+    <textarea id="input" placeholder="输入你的文字或问题..." rows="2"></textarea>
+    <button class="btn" id="sendBtn" onclick="send()">发送</button>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let sessionId = 'sess-' + Math.random().toString(36).slice(2, 8);
+let loading = false;
+
+$('input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+function appendBubble(role, content, tools) {
+  const chat = $('chat');
+  if (chat.querySelector('.chat-empty')) chat.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'chat-bubble ' + role;
+  if (role === 'assistant' && tools && tools.length) {
+    let tags = '';
+    tools.forEach(t => { tags += `<span class="tool-tag">调用: ${t}</span>`; });
+    div.innerHTML = tags + '<br>' + content.replace(/\n/g, '<br>');
+  } else {
+    div.textContent = content;
+  }
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function send() {
+  const input = $('input');
+  const text = input.value.trim();
+  if (!text || loading) return;
+  loading = true;
+  $('sendBtn').disabled = true;
+
+  appendBubble('user', text);
+  input.value = '';
+
+  try {
+    const resp = await fetch('/agent/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: 'demo', message: text, session_id: sessionId })
+    });
+    const data = await resp.json();
+    sessionId = data.session_id;
+    appendBubble('assistant', data.reply, data.tool_calls);
+  } catch(e) {
+    appendBubble('assistant', '请求失败: ' + e.message);
+  }
+  loading = false;
+  $('sendBtn').disabled = false;
+}
+</script>
+</body>
+</html>
